@@ -2,12 +2,16 @@ import React, {useState, useEffect} from 'react';
 import queryString from 'query-string';
 //queryString helps to retrieve data from URL 
 import io from 'socket.io-client';
+import './Chat.css'
+import InfoBar from './InfoBar'
 
 let socket;
 
 const Chat = ({location}) => {
     const [name, setName] = useState('');
     const [room, setRoom] = useState('');
+    const [messages, setMessages] = useState([]);
+    const [message, setMessage] = useState('');
     const ENDPOINT = 'localhost:5000';
     //cleaner code ^
 
@@ -29,14 +33,41 @@ const Chat = ({location}) => {
         
         })
         return() => {
-            socket.emit('disconnect');
+            // socket.emit('disconnect');
+            socket.disconnect();
             socket.off();
         }
 
     }, [ENDPOINT, location.search]);
     //if endpoint and location.search, rerender useEffect
+    useEffect(() => {
+        socket.on('message', (message) => {
+            setMessages([...messages, message]);
+        })
+    }, [messages]);
+    
+    const sendMessage = (event) => {
+        event.preventDefault();
+
+        if(message) {
+            socket.emit('sendMessage', message, () => setMessage(''))
+            //setMessage empty string to clear message 
+        }
+    }
+
+
+    
     return (
-        <h1>Chat</h1>
+        <div className="outerContainer">
+            <div className="container">
+                <InfoBar room={room}/>
+                {/* <input value={message} 
+                onChange={(event) => setMessage(event.target.value)}
+                onKeyPress={event=>event.key === 'Enter' ? setMessage(event) : null }
+                /> */}
+
+            </div>
+        </div>
     )
 }
 export default Chat;
